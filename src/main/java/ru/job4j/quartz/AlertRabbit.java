@@ -24,41 +24,42 @@ import static org.quartz.TriggerBuilder.newTrigger;
 public class AlertRabbit {
     /**
      * Метод реализует работу планировщика
+     * properties - получение обекта класса Properties с загрузкой в него данных из файла с настройками
      * scheduler - создание класса, управляющего всеми работами
      * job - ссоздание задачи с передачей в нее класса, в котором описаны требуемые действия
      * times - создание расписания, запускать задачу через 10 секунд в бесконечном цикле
      * trigger - создание триггера - когда начинать запуск (сразу), с какой периодичностью
      * загрузка задачи и триггера в планировщик
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        Properties properties = getProperties();
         try {
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
             JobDetail job = newJob(Rabbit.class).build();
             SimpleScheduleBuilder times = simpleSchedule()
-                .withIntervalInSeconds(getIntervalFromProperties())
+                .withIntervalInSeconds(Integer.parseInt(properties.getProperty("rabbit.interval")))
                 .repeatForever();
             Trigger trigger = newTrigger()
                 .startNow()
                 .withSchedule(times)
                 .build();
             scheduler.scheduleJob(job, trigger);
-        } catch (SchedulerException | IOException e) {
-            e.printStackTrace();
+        } catch (SchedulerException se) {
+            se.printStackTrace();
         }
     }
 
     /**
      * Метод реализует чтение файла с настройками
-     * @return возвращает значение интервала времени для запуска задачи
      */
-    private static int getIntervalFromProperties() throws IOException {
+    private static Properties getProperties() throws IOException {
         Properties properties;
         try (InputStream in = AlertRabbit.class.getClassLoader().getResourceAsStream("rabbit.properties")) {
             properties = new Properties();
             properties.load(in);
         }
-        return Integer.parseInt(properties.getProperty("rabbit.interval"));
+        return properties;
     }
 
     /**
