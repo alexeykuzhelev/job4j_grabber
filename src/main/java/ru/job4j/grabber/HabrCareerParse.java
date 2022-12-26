@@ -1,6 +1,7 @@
 package ru.job4j.grabber;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import org.jsoup.Connection;
@@ -8,6 +9,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 
 /*
   @author Alexey Kuzhelev (aleks2kv1977@gmail.com)
@@ -41,6 +43,8 @@ public class HabrCareerParse {
             Element dateTimeElement = Objects.requireNonNull(dateElement).child(0);
             String dateTime = dateTimeElement.attr("datetime");
             System.out.println("Дата вакансии: " + dateTime);
+            LocalDateTime localDateTime = new HabrCareerDateTimeParser().parse(dateTime);
+            System.out.println("Дата вакансии в формате для LocalDateTime: " + localDateTime);
         });
     }
 }
