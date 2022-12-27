@@ -30,11 +30,16 @@ public class HabrCareerParse {
 
     private static final String PAGE_LINK = String.format("%s/vacancies/java_developer", SOURCE_LINK);
 
-    private static final DateTimeParser DATE_TIME_PARSER = new HabrCareerDateTimeParser();
+    private final DateTimeParser dateTimeParser;
 
     public static final int PAGES = 5;
 
+    public HabrCareerParse(DateTimeParser dateTimeParser) {
+        this.dateTimeParser = dateTimeParser;
+    }
+
     public static void main(String[] args) throws IOException {
+        HabrCareerParse habrCareerParse = new HabrCareerParse(new HabrCareerDateTimeParser());
         for (int i = 1; i <= PAGES; i++) {
             Connection connection = Jsoup.connect(String.format("%s%s", PAGE_LINK, "?page=" + i));
             Document document = connection.get();
@@ -49,7 +54,7 @@ public class HabrCareerParse {
                 Element dateTimeElement = Objects.requireNonNull(dateElement).child(0);
                 String dateTime = dateTimeElement.attr("datetime");
                 System.out.println("Дата вакансии: " + dateTime);
-                LocalDateTime localDateTime = DATE_TIME_PARSER.parse(dateTime);
+                LocalDateTime localDateTime = habrCareerParse.dateTimeParser.parse(dateTime);
                 System.out.println("Дата вакансии в формате для LocalDateTime: " + localDateTime);
             });
         }
