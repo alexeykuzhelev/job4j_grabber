@@ -2,6 +2,8 @@ package ru.job4j.grabber;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import org.jsoup.Connection;
@@ -15,7 +17,7 @@ import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 /*
   @author Alexey Kuzhelev (aleks2kv1977@gmail.com)
  * @version $Id$
- * @since 30.12.2022
+ * @since 07.02.2023
  */
 
 /**
@@ -24,7 +26,7 @@ import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
  * Нужно получить данные по вакансиям с сайта вакансий career.habr.com:
  * извлечь со страницы название, дату создания и ссылку на вакансию
  */
-public class HabrCareerParse {
+public class HabrCareerParse implements Parse {
 
     private static final String SOURCE_LINK = "https://career.habr.com";
 
@@ -38,28 +40,30 @@ public class HabrCareerParse {
         this.dateTimeParser = dateTimeParser;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         HabrCareerParse habrCareerParse = new HabrCareerParse(new HabrCareerDateTimeParser());
-        for (int i = 1; i <= PAGES; i++) {
-            Connection connection = Jsoup.connect(String.format("%s%s", PAGE_LINK, "?page=" + i));
-            Document document = connection.get();
-            Elements rows = document.select(".vacancy-card__inner");
-            rows.forEach(row -> {
-                Element titleElement = row.select(".vacancy-card__title").first();
-                Element linkElement = Objects.requireNonNull(titleElement).child(0);
-                String vacancyName = titleElement.text();
-                String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
-                System.out.printf("%s %s%n", vacancyName, link);
-                Element dateElement = row.select(".vacancy-card__date").first();
-                Element dateTimeElement = Objects.requireNonNull(dateElement).child(0);
-                String dateTime = dateTimeElement.attr("datetime");
-                System.out.println("Дата вакансии: " + dateTime);
-                LocalDateTime localDateTime = habrCareerParse.dateTimeParser.parse(dateTime);
-                System.out.println("Дата вакансии в формате для LocalDateTime: " + localDateTime);
-                String vacancyDescription = retrieveDescription(link);
-                System.out.println("Детальное описание вакансии: \n" + vacancyDescription);
-            });
-        }
+        List<Post> posts = habrCareerParse.list(String.format("%s%s", PAGE_LINK, "?page="));
+        posts.forEach(System.out::println);
+//        for (int i = 1; i <= PAGES; i++) {
+//            Connection connection = Jsoup.connect(String.format("%s%s", PAGE_LINK, "?page=" + i));
+//            Document document = connection.get();
+//            Elements rows = document.select(".vacancy-card__inner");
+//            rows.forEach(row -> {
+//                Element titleElement = row.select(".vacancy-card__title").first();
+//                Element linkElement = Objects.requireNonNull(titleElement).child(0);
+//                String vacancyName = titleElement.text();
+//                String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
+//                System.out.printf("%s %s%n", vacancyName, link);
+//                Element dateElement = row.select(".vacancy-card__date").first();
+//                Element dateTimeElement = Objects.requireNonNull(dateElement).child(0);
+//                String dateTime = dateTimeElement.attr("datetime");
+//                System.out.println("Дата вакансии: " + dateTime);
+//                LocalDateTime localDateTime = habrCareerParse.dateTimeParser.parse(dateTime);
+//                System.out.println("Дата вакансии в формате для LocalDateTime: " + localDateTime);
+//                String vacancyDescription = retrieveDescription(link);
+//                System.out.println("Детальное описание вакансии: \n" + vacancyDescription);
+//            });
+//        }
     }
 
     /**
@@ -77,5 +81,64 @@ public class HabrCareerParse {
             e.printStackTrace();
         }
         return text;
+    }
+
+    private Element retrieveTitle(Element element) {
+        return Objects.requireNonNull(element.select(".vacancy-card__title").first());
+    }
+
+    private String retrieveLink(Element element) {
+        return retrieveTitle(element).child(0).attr("href");
+    }
+
+    private LocalDateTime retrieveDate(Element element) {
+        Element dateElement = Objects.requireNonNull(element.select(".vacancy-card__date").first()).child(0);
+        return dateTimeParser.parse(dateElement.attr("datetime"));
+    }
+
+    /**
+     * Метод делает запрос на сервер, получает HTML страницу и создает из нее объект Document.
+     * @return возвращает объект Document с данными HTML страницы
+     */
+    private Document getDocument(String pageLink) {
+        Document document = null;
+        try {
+            Connection connection = Jsoup.connect(pageLink);
+            document = connection.get();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return document;
+    }
+
+    /**
+     * Метод парсит все детали одного поста.
+     * @return возвращает объект с данными поста
+     */
+    public Post parsePost(Element element) {
+        String link = retrieveTitle(element).child(0).attr("href");
+        return new Post(
+            retrieveTitle(element).text(),
+            retrieveLink(element),
+            retrieveDescription(String.format("%s%s", SOURCE_LINK, link)),
+            retrieveDate(element)
+        );
+    }
+
+    /**
+     * Метод загружает список всех постов.
+     * В нем нужно спарсить 5 страниц.
+     * @param link - ссылка, откуда берем все посты
+     * @return возвращает список из всех постов в документе
+     */
+    @Override
+    public List<Post> list(String link) {
+        List<Post> posts = new ArrayList<>();
+        for (int i = 1; i <= PAGES; i++) {
+            Document document = getDocument(link);
+            Elements rows = document.select(".vacancy-card__inner");
+            rows.forEach(row -> posts.add(parsePost(row)));
+        }
+        return posts;
     }
 }
