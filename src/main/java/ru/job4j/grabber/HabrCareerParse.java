@@ -44,26 +44,6 @@ public class HabrCareerParse implements Parse {
         HabrCareerParse habrCareerParse = new HabrCareerParse(new HabrCareerDateTimeParser());
         List<Post> posts = habrCareerParse.list(String.format("%s%s", PAGE_LINK, "?page="));
         posts.forEach(System.out::println);
-//        for (int i = 1; i <= PAGES; i++) {
-//            Connection connection = Jsoup.connect(String.format("%s%s", PAGE_LINK, "?page=" + i));
-//            Document document = connection.get();
-//            Elements rows = document.select(".vacancy-card__inner");
-//            rows.forEach(row -> {
-//                Element titleElement = row.select(".vacancy-card__title").first();
-//                Element linkElement = Objects.requireNonNull(titleElement).child(0);
-//                String vacancyName = titleElement.text();
-//                String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
-//                System.out.printf("%s %s%n", vacancyName, link);
-//                Element dateElement = row.select(".vacancy-card__date").first();
-//                Element dateTimeElement = Objects.requireNonNull(dateElement).child(0);
-//                String dateTime = dateTimeElement.attr("datetime");
-//                System.out.println("Дата вакансии: " + dateTime);
-//                LocalDateTime localDateTime = habrCareerParse.dateTimeParser.parse(dateTime);
-//                System.out.println("Дата вакансии в формате для LocalDateTime: " + localDateTime);
-//                String vacancyDescription = retrieveDescription(link);
-//                System.out.println("Детальное описание вакансии: \n" + vacancyDescription);
-//            });
-//        }
     }
 
     /**
