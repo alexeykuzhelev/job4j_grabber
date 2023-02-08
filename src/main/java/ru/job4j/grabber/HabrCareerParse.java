@@ -17,7 +17,7 @@ import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 /*
   @author Alexey Kuzhelev (aleks2kv1977@gmail.com)
  * @version $Id$
- * @since 07.02.2023
+ * @since 08.02.2023
  */
 
 /**
@@ -32,9 +32,9 @@ public class HabrCareerParse implements Parse {
 
     private static final String PAGE_LINK = String.format("%s/vacancies/java_developer", SOURCE_LINK);
 
-    private final DateTimeParser dateTimeParser;
-
     public static final int PAGES = 5;
+
+    private final DateTimeParser dateTimeParser;
 
     public HabrCareerParse(DateTimeParser dateTimeParser) {
         this.dateTimeParser = dateTimeParser;
@@ -68,7 +68,7 @@ public class HabrCareerParse implements Parse {
     }
 
     private String retrieveLink(Element element) {
-        return retrieveTitle(element).child(0).attr("href");
+        return String.format("%s%s", SOURCE_LINK, retrieveTitle(element).child(0).attr("href"));
     }
 
     private LocalDateTime retrieveDate(Element element) {
@@ -115,7 +115,7 @@ public class HabrCareerParse implements Parse {
     public List<Post> list(String link) {
         List<Post> posts = new ArrayList<>();
         for (int i = 1; i <= PAGES; i++) {
-            Document document = getDocument(link);
+            Document document = getDocument(link + i);
             Elements rows = document.select(".vacancy-card__inner");
             rows.forEach(row -> posts.add(parsePost(row)));
         }
