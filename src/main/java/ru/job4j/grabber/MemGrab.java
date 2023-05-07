@@ -69,6 +69,10 @@ public class MemGrab implements Grab {
         }
     }
 
+    @Override
+    public void init(Parse parse, Store store, Scheduler scheduler) {
+    }
+
     /**
      * Класс описывает действия для загрузки всех постов.
      * Загруженные посты сохраняются в модели в памяти.
