@@ -14,7 +14,7 @@ import ru.job4j.grabber.utils.HabrCareerDateTimeParser;
 /*
   @author Alexey Kuzhelev (aleks2kv1977@gmail.com)
  * @version $Id$
- * @since 06.03.2023
+ * @since 08.05.2023
  */
 
 /**
@@ -52,7 +52,7 @@ public class PsqlStore implements Store, AutoCloseable {
     public void save(Post post) {
         try (
             PreparedStatement ps = cnn.prepareStatement(
-                "insert into post(name, text, link, created) values (?, ?, ?, ?) "
+                "insert into post(name, link, text, created) values (?, ?, ?, ?) "
                     + "on conflict (link) "
                     + "do update set name = excluded.name, "
                     + "text = excluded.text, "
@@ -61,8 +61,8 @@ public class PsqlStore implements Store, AutoCloseable {
             )
         ) {
             ps.setString(1, post.getTitle());
-            ps.setString(2, post.getDescription());
-            ps.setString(3, post.getLink());
+            ps.setString(2, post.getLink());
+            ps.setString(3, post.getDescription());
             ps.setTimestamp(4, Timestamp.valueOf(post.getCreated()));
             ps.execute();
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -122,8 +122,8 @@ public class PsqlStore implements Store, AutoCloseable {
         return new Post(
             resultSet.getInt("id"),
             resultSet.getString("name"),
-            resultSet.getString("text"),
             resultSet.getString("link"),
+            resultSet.getString("text"),
             resultSet.getTimestamp("created").toLocalDateTime()
         );
     }
